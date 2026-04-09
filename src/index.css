@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=League+Spartan:wght@400;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #CCFF00;
+  --color-background: #09090B;
+  --color-surface: #18181B;
+  --color-text: #F4F4F5;
+  --color-muted: #71717A;
+  --color-danger: #FA114F;
+  --font-display: 'Archivo Black', sans-serif;
+  --font-sans: 'Space Grotesk', sans-serif;
+  --font-bold: 'League Spartan', sans-serif;
+  --radius: 0px;
+  --spacing-sm: 16px;
+  --spacing-md: 32px;
+  --spacing-lg: 64px;
+  --spacing-xl: 120px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-muted);
+}
+
+/* Animations */
+@keyframes wipeReveal {
+  0% { clip-path: inset(0 100% 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(204, 255, 0, 0); }
+  50% { box-shadow: 0 0 20px 4px rgba(204, 255, 0, 0.15); }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes fillBar {
+  0% { width: 0%; }
+  100% { width: var(--fill-width, 0%); }
+}
+
+@keyframes countUp {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sparklineMove {
+  0% { stroke-dashoffset: 200; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.animate-wipe { animation: wipeReveal 1.2s cubic-bezier(0.77, 0, 0.175, 1) forwards; }
+.animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-ticker { animation: ticker 20s linear infinite; }
+.animate-blink { animation: blink 1.5s ease-in-out infinite; }
+.animate-fill-bar { animation: fillBar 1.2s ease-out forwards; }
+.animate-sparkline { animation: sparklineMove 2s ease-out forwards; }
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+
+/* Brutalist Button Hover - instant swap */
+.btn-brutal {
+  transition: none !important;
+}
+.btn-brutal:hover {
+  background-color: var(--color-text) !important;
+  color: var(--color-background) !important;
+  border-color: var(--color-text) !important;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  font-family: var(--font-bold);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  cursor: pointer;
+  transition: none;
+}
+.btn-primary:hover {
+  background-color: var(--color-text) !important;
+  color: var(--color-background) !important;
+}
+
+/* Ledger row hover */
+.ledger-row:hover {
+  background-color: var(--color-surface);
+}
+
+/* Redaction loading blocks */
+.redaction-block {
+  background: var(--color-muted);
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+/* Category bar fill */
+.category-fill {
+  transition: width 0.3s ease-out;
+}
+
+/* Asset highlight */
+.asset-item {
+  transition: opacity 0.15s ease;
+}
+.asset-group:hover .asset-item:not(:hover) {
+  opacity: 0.3;
+}
+
+/* Error flash */
+@keyframes error-flash {
+  0%, 100% { border-color: var(--color-danger); }
+  50% { border-color: transparent; }
+}
+.error-flash {
+  animation: error-flash 0.8s ease-in-out 3;
+}
+
+/* Neon green underline accent */
+.neon-underline {
+  background: linear-gradient(to right, var(--color-primary), transparent);
+  height: 2px;
+}
+
+/* Number formatting */
+.mono-number {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+}
