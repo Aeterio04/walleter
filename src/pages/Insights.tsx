@@ -22,6 +22,7 @@ export default function Insights() {
   const [isLoading, setIsLoading] = useState(true)
   const [dismissed, setDismissed] = useState<number[]>([])
   const [showModal, setShowModal] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'active' | 'history'>('active') // New state
 
   // Find the most over-budget category
   const topSpendCategory = Object.entries(categorySpending).sort((a, b) => b[1] - a[1])[0]
@@ -110,27 +111,131 @@ export default function Insights() {
       case 'expenses': navigate('/expenses'); break
       case 'expenses-sub': navigate('/expenses'); break
       case 'investments': navigate('/investments'); break
-      case 'dismiss': setDismissed(prev => [...prev, articleId]); break
+      case 'dismiss': 
+        setDismissed(prev => [...prev, articleId])
+        // Auto-switch to history view when all dismissed
+        if (visibleArticles.length === 1) {
+          setTimeout(() => setViewMode('history'), 300)
+        }
+        break
       case 'cancel': setShowModal('cancel'); break
       default: break
     }
   }
 
-  if (visibleArticles.length === 0) {
+  const handleViewInsight = (id: number) => {
+    setViewMode('active')
+    setDismissed(prev => prev.filter(d => d !== id))
+    const idx = articles.findIndex(a => a.id === id)
+    if (idx !== -1) setActiveArticle(idx)
+  }
+
+  // History table view
+  if (viewMode === 'history' || visibleArticles.length === 0) {
+    const dismissedArticles = articles.filter(a => dismissed.includes(a.id))
+    
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8">
-        <h1 className="font-display text-[48px] text-muted uppercase text-center leading-tight">
-          ALL CLEAR.
-        </h1>
-        <p className="text-sm text-muted mt-4 uppercase tracking-[0.1em]">
-          NO ACTIVE INSIGHTS. CHECK BACK AFTER MORE TRANSACTIONS.
-        </p>
-        <button
-          onClick={() => setDismissed([])}
-          className="mt-8 py-3 px-6 border border-primary text-primary text-xs uppercase tracking-[0.1em] font-bold btn-brutal bg-transparent"
-        >
-          RESTORE ALL INSIGHTS
-        </button>
+      <div className="min-h-screen flex flex-col">
+        {/* Header */}
+        <div className="border-b border-muted/30 p-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="font-display text-[48px] text-text uppercase tracking-tight leading-none">
+                INSIGHT HISTORY
+              </h1>
+              <p className="text-[10px] text-muted uppercase tracking-[0.15em] mt-2">
+                PAST NOTIFICATIONS • {dismissedArticles.length} TOTAL
+              </p>
+            </div>
+            {dismissedArticles.length > 0 && (
+              <button
+                onClick={() => {
+                  setDismissed([])
+                  setViewMode('active')
+                }}
+                className="py-3 px-6 border border-primary text-primary text-xs uppercase tracking-[0.1em] font-bold btn-brutal bg-transparent"
+              >
+                RESTORE ALL
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="flex-1 p-8">
+          {dismissedArticles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <h2 className="font-display text-[32px] text-muted uppercase text-center leading-tight mb-4">
+                NO DISMISSED INSIGHTS
+              </h2>
+              <p className="text-sm text-muted uppercase tracking-[0.1em]">
+                ALL INSIGHTS ARE CURRENTLY ACTIVE
+              </p>
+            </div>
+          ) : (
+            <div className="border border-muted/30">
+              {/* Table Header */}
+              <div className="grid grid-cols-[120px_200px_1fr_140px_120px] bg-surface border-b border-muted/30">
+                <div className="px-4 py-3 border-r border-muted/30">
+                  <p className="text-[9px] text-muted uppercase tracking-[0.15em] font-bold">DATE</p>
+                </div>
+                <div className="px-4 py-3 border-r border-muted/30">
+                  <p className="text-[9px] text-muted uppercase tracking-[0.15em] font-bold">TAG</p>
+                </div>
+                <div className="px-4 py-3 border-r border-muted/30">
+                  <p className="text-[9px] text-muted uppercase tracking-[0.15em] font-bold">HEADLINE</p>
+                </div>
+                <div className="px-4 py-3 border-r border-muted/30">
+                  <p className="text-[9px] text-muted uppercase tracking-[0.15em] font-bold">DISMISSED</p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-[9px] text-muted uppercase tracking-[0.15em] font-bold">ACTION</p>
+                </div>
+              </div>
+
+              {/* Table Rows */}
+              {dismissedArticles.map((article) => (
+                <div
+                  key={article.id}
+                  className="grid grid-cols-[120px_200px_1fr_140px_120px] border-b border-muted/30 last:border-0 hover:bg-surface/50 transition-none"
+                >
+                  <div className="px-4 py-4 border-r border-muted/30 flex items-center">
+                    <p className="text-xs text-text mono-number">{article.date}</p>
+                  </div>
+                  <div className="px-4 py-4 border-r border-muted/30 flex items-center">
+                    <span className="text-[10px] text-primary uppercase tracking-[0.1em] font-bold">
+                      {article.tag}
+                    </span>
+                  </div>
+                  <div className="px-4 py-4 border-r border-muted/30 flex items-center">
+                    <p className="text-sm text-text/80 font-sans truncate">
+                      {article.headline}
+                    </p>
+                  </div>
+                  <div className="px-4 py-4 border-r border-muted/30 flex items-center">
+                    <p className="text-xs text-muted uppercase tracking-[0.1em]">
+                      {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.')}
+                    </p>
+                  </div>
+                  <div className="px-4 py-4 flex items-center">
+                    <button
+                      onClick={() => handleViewInsight(article.id)}
+                      className="text-[10px] text-primary uppercase tracking-[0.1em] font-bold hover:text-text transition-none"
+                    >
+                      VIEW →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 py-3 border-t border-muted/30 flex justify-between">
+          <p className="text-[10px] text-muted uppercase tracking-[0.15em]">SYS.LOG // AI INSIGHTS</p>
+          <p className="text-[10px] text-muted uppercase tracking-[0.15em]">BUILD: WA-V2.4.1</p>
+        </div>
       </div>
     )
   }
@@ -185,6 +290,15 @@ export default function Insights() {
             {a.tag}
           </button>
         ))}
+        {dismissed.length > 0 && (
+          <button
+            onClick={() => setViewMode('history')}
+            className="px-6 py-4 text-[10px] uppercase tracking-[0.15em] font-bold text-muted hover:text-primary hover:bg-surface/50 transition-none border-l border-muted/30"
+          >
+            <span className="block text-[9px] text-muted mb-1">DISMISSED</span>
+            VIEW HISTORY ({dismissed.length})
+          </button>
+        )}
       </div>
 
       {/* Loading */}

@@ -11,7 +11,7 @@ export default function Signup() {
   const navigate = useNavigate()
   const { signup } = useApp()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -20,8 +20,12 @@ export default function Signup() {
     if (password.length < 6) return setError('PASSWORD MIN 6 CHARACTERS')
     if (password !== confirm) return setError('PASSWORDS DO NOT MATCH')
 
-    signup(name.trim(), email.trim())
-    navigate('/dashboard')
+    try {
+      await signup(name.trim(), email.trim(), password)
+      navigate('/dashboard')
+    } catch (error) {
+      setError((error as Error).message.toUpperCase())
+    }
   }
 
   return (

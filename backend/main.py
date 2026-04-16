@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from models import Base, engine
-from routers import auth, users, transactions, budgets, investments
+from routers import auth, users, transactions, budgets, investments, insights, copilot
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -27,6 +27,8 @@ app.include_router(users.router)
 app.include_router(transactions.router)
 app.include_router(budgets.router)
 app.include_router(investments.router)
+app.include_router(insights.router)
+app.include_router(copilot.router)
 
 
 @app.get("/")

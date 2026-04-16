@@ -157,3 +157,41 @@ class DashboardSummary(BaseModel):
     balance: float
     total_invested: float
     category_spending: dict[str, float]
+
+
+# AI Insight Schemas
+class AIInsightResponse(BaseModel):
+    id: str
+    tag: str
+    headline: str
+    content: str  # JSON string
+    dismissed: bool
+    dismissed_at: Optional[datetime]
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class GenerateInsightRequest(BaseModel):
+    force: bool = False  # Force generation even if limit reached
+
+
+class GenerateInsightResponse(BaseModel):
+    success: bool
+    message: str
+    insights_generated: int
+    remaining_this_period: int
+
+
+# Copilot Schemas
+class CopilotChatRequest(BaseModel):
+    message: str = Field(..., min_length=1)
+
+
+class CopilotChatResponse(BaseModel):
+    success: bool
+    intent: Optional[dict] = None
+    entities: Optional[dict] = None
+    response: dict
+    error: Optional[str] = None

@@ -104,6 +104,37 @@ body {
 .animate-fill-bar { animation: fillBar 1.2s ease-out forwards; }
 .animate-sparkline { animation: sparklineMove 2s ease-out forwards; }
 
+/* SVG line draw animation */
+@keyframes drawLine {
+  0% { stroke-dashoffset: 500; }
+  100% { stroke-dashoffset: 0; }
+}
+.animate-draw {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: drawLine 2s ease-out forwards;
+}
+.animate-draw-delay {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: drawLine 2s ease-out 0.3s forwards;
+}
+
+/* Pie chart rotate-in */
+@keyframes pieReveal {
+  0% { transform: rotate(-90deg) scale(0.8); opacity: 0; }
+  100% { transform: rotate(0) scale(1); opacity: 1; }
+}
+.animate-pie { animation: pieReveal 0.8s ease-out forwards; }
+
+/* Count pulse for stat numbers */
+@keyframes statPulse {
+  0% { opacity: 0; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-stat { animation: statPulse 0.6s ease-out forwards; }
+
 .stagger-1 { animation-delay: 0.1s; }
 .stagger-2 { animation-delay: 0.2s; }
 .stagger-3 { animation-delay: 0.3s; }
@@ -186,4 +217,224 @@ body {
 ::selection {
   background-color: var(--color-primary);
   color: var(--color-background);
+}
+
+/* ─── Terminal Aesthetic ──────────────────────────────── */
+
+/* Terminal row alternating micro-stripes */
+.terminal-row:nth-child(even) {
+  background-color: rgba(24, 24, 27, 0.35);
+}
+
+/* Terminal row hover — green cursor bar on left edge */
+.terminal-row {
+  position: relative;
+  transition: none;
+}
+.terminal-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0px;
+  background: var(--color-primary);
+  transition: width 0.08s ease-out;
+}
+.terminal-row:hover::before {
+  width: 3px;
+}
+.terminal-row:hover {
+  background-color: var(--color-surface) !important;
+}
+
+/* Terminal row glow variants */
+.terminal-row-credit:hover {
+  box-shadow: inset 4px 0 12px -4px rgba(204, 255, 0, 0.12);
+}
+.terminal-row-debit:hover {
+  box-shadow: inset 4px 0 12px -4px rgba(250, 17, 79, 0.08);
+}
+
+/* Line number gutter styling */
+.terminal-gutter {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: rgba(113, 113, 122, 0.35);
+  user-select: none;
+  min-width: 28px;
+  text-align: right;
+  letter-spacing: 0.05em;
+}
+
+/* Terminal prompt prefix for headers */
+.terminal-prompt::before {
+  content: '>_ ';
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+/* ─── Budget Warning Shimmer ─────────────────────────── */
+
+@keyframes budgetWarningShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.budget-warning-bar {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(204, 255, 0, 0.15) 40%,
+    rgba(204, 255, 0, 0.25) 50%,
+    rgba(204, 255, 0, 0.15) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: budgetWarningShimmer 2.5s ease-in-out infinite;
+}
+
+.budget-danger-bar {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(250, 17, 79, 0.12) 40%,
+    rgba(250, 17, 79, 0.2) 50%,
+    rgba(250, 17, 79, 0.12) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: budgetWarningShimmer 2s ease-in-out infinite;
+}
+
+/* ─── Type Badges ────────────────────────────────────── */
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: var(--font-bold);
+}
+.type-badge-in {
+  background-color: rgba(204, 255, 0, 0.15);
+  color: var(--color-primary);
+  border: 1px solid rgba(204, 255, 0, 0.3);
+}
+.type-badge-out {
+  background-color: rgba(250, 17, 79, 0.1);
+  color: var(--color-danger);
+  border: 1px solid rgba(250, 17, 79, 0.25);
+}
+
+/* ─── Copilot ────────────────────────────────────────── */
+
+/* Vertical pill trigger */
+.copilot-trigger {
+  position: fixed;
+  right: 0;
+  bottom: 50%;
+  transform: translateY(50%);
+  z-index: 200;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  background: var(--color-surface);
+  border: 1px solid rgba(204, 255, 0, 0.25);
+  border-right: none;
+  color: var(--color-primary);
+  padding: 20px 12px;
+  font-family: var(--font-bold);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: none;
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+.copilot-trigger:hover {
+  background: var(--color-primary);
+  color: var(--color-background);
+  border-color: var(--color-primary);
+  box-shadow: -6px 0 24px rgba(204, 255, 0, 0.3);
+  animation: none;
+}
+.copilot-trigger.active {
+  background: var(--color-primary);
+  color: var(--color-background);
+  border-color: var(--color-primary);
+  padding: 14px 10px;
+  font-size: 10px;
+  animation: none;
+}
+
+/* Copilot panel slide */
+@keyframes copilotSlideIn {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.copilot-panel {
+  animation: copilotSlideIn 0.15s ease-out forwards;
+}
+
+/* Copilot message accents */
+.copilot-msg-user {
+  border-left: 2px solid rgba(113, 113, 122, 0.4);
+}
+.copilot-msg-assistant {
+  border-left: 2px solid var(--color-primary);
+}
+.copilot-msg-system {
+  border-left: 2px solid rgba(250, 17, 79, 0.4);
+  background: rgba(113, 113, 122, 0.05);
+}
+
+/* Quick action hover prompt slide */
+.quick-action {
+  position: relative;
+  overflow: hidden;
+}
+.quick-action::before {
+  content: '>';
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  transition: left 0.1s ease-out;
+  opacity: 0;
+}
+.quick-action:hover::before {
+  left: 8px;
+  opacity: 1;
+}
+.quick-action:hover {
+  padding-left: 24px !important;
+}
+
+/* Percentage badge */
+.pct-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(113, 113, 122, 0.3);
+  font-family: var(--font-sans);
 }

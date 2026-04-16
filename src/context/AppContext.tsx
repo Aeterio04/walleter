@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import * as api from '../lib/api'
 
 // ── Types ──────────────────────────────────────────────
 
@@ -50,9 +51,6 @@ export const CATEGORIES: { value: ExpenseCategory; label: string; icon: string }
 
 // ── Helpers ────────────────────────────────────────────
 
-let _id = 100
-function uid() { return String(++_id) }
-
 export function formatINR(val: number): string {
   const abs = Math.abs(val)
   return (val < 0 ? '-' : '') + '₹' + abs.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -64,42 +62,6 @@ export function formatINRSigned(val: number): string {
   return prefix + '₹' + abs.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
 
-// ── Seed Data ──────────────────────────────────────────
-
-const seedTransactions: Transaction[] = [
-  { id: uid(), date: '2024-04-09', description: 'Canteen Lunch', amount: 80, category: 'Food', type: 'debit' },
-  { id: uid(), date: '2024-04-09', description: 'Bus Pass Recharge', amount: 250, category: 'Transport', type: 'debit' },
-  { id: uid(), date: '2024-04-08', description: 'Pocket Money from Home', amount: 3000, category: 'Food', type: 'credit' },
-  { id: uid(), date: '2024-04-08', description: 'Notebooks & Pens', amount: 180, category: 'Stationery', type: 'debit' },
-  { id: uid(), date: '2024-04-07', description: 'Netflix Subscription', amount: 199, category: 'Subscriptions', type: 'debit' },
-  { id: uid(), date: '2024-04-07', description: 'Auto Rickshaw', amount: 45, category: 'Transport', type: 'debit' },
-  { id: uid(), date: '2024-04-06', description: 'Movie Tickets', amount: 350, category: 'Entertainment', type: 'debit' },
-  { id: uid(), date: '2024-04-06', description: 'Mutual Fund SIP', amount: 500, category: 'Investment', type: 'debit' },
-  { id: uid(), date: '2024-04-05', description: 'Freelance Gig Payment', amount: 2000, category: 'Entertainment', type: 'credit' },
-  { id: uid(), date: '2024-04-05', description: 'Tea & Snacks', amount: 60, category: 'Food', type: 'debit' },
-  { id: uid(), date: '2024-04-04', description: 'Spotify Premium', amount: 59, category: 'Subscriptions', type: 'debit' },
-  { id: uid(), date: '2024-04-04', description: 'Photocopy & Print', amount: 120, category: 'Stationery', type: 'debit' },
-  { id: uid(), date: '2024-04-03', description: 'Scholarship Credit', amount: 5000, category: 'Entertainment', type: 'credit' },
-  { id: uid(), date: '2024-04-03', description: 'Street Food', amount: 90, category: 'Food', type: 'debit' },
-  { id: uid(), date: '2024-04-02', description: 'Metro Card Top-up', amount: 200, category: 'Transport', type: 'debit' },
-]
-
-const seedBudgets: BudgetCategory[] = [
-  { id: uid(), name: 'Food', icon: '🍽', limit: 3000, spent: 0, locked: false },
-  { id: uid(), name: 'Transport', icon: '🚌', limit: 1500, spent: 0, locked: false },
-  { id: uid(), name: 'Stationery', icon: '📝', limit: 800, spent: 0, locked: false },
-  { id: uid(), name: 'Entertainment', icon: '🎬', limit: 1000, spent: 0, locked: false },
-  { id: uid(), name: 'Subscriptions', icon: '♾', limit: 500, spent: 0, locked: true },
-  { id: uid(), name: 'Investment', icon: '📈', limit: 1000, spent: 0, locked: false },
-]
-
-const seedInvestments: Investment[] = [
-  { id: uid(), name: 'SBI Bluechip Fund', type: 'Mutual Fund', value: 5000, notes: 'Monthly SIP ₹500', dateAdded: '2024-01-15' },
-  { id: uid(), name: 'Digital Gold', type: 'Gold', value: 2000, notes: 'Bought on PhonePe', dateAdded: '2024-02-10' },
-  { id: uid(), name: 'Zerodha Stocks', type: 'Stocks', value: 3500, notes: 'Infosys, TCS shares', dateAdded: '2024-03-01' },
-  { id: uid(), name: 'Post Office FD', type: 'FD', value: 10000, notes: '1-year lock-in', dateAdded: '2023-12-01' },
-]
-
 // ── Context ────────────────────────────────────────────
 
 interface AppState {
@@ -109,29 +71,33 @@ interface AppState {
   investments: Investment[]
   emergencyFund: number
   emergencyTarget: number
+  loading: boolean
 
   // User actions
-  login: (name: string, email: string) => void
-  signup: (name: string, email: string) => void
-  logout: () => void
-  togglePlan: () => void
+  login: (email: string, password: string) => Promise<void>
+  signup: (name: string, email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  togglePlan: () => Promise<void>
 
   // Transaction CRUD
-  addTransaction: (t: Omit<Transaction, 'id'>) => void
-  updateTransaction: (id: string, t: Partial<Transaction>) => void
-  deleteTransaction: (id: string) => void
+  addTransaction: (t: Omit<Transaction, 'id'>) => Promise<void>
+  updateTransaction: (id: string, t: Partial<Transaction>) => Promise<void>
+  deleteTransaction: (id: string) => Promise<void>
+  refreshTransactions: () => Promise<void>
 
   // Budget CRUD
-  addBudget: (b: Omit<BudgetCategory, 'id' | 'spent'>) => void
-  updateBudget: (id: string, b: Partial<BudgetCategory>) => void
-  deleteBudget: (id: string) => void
+  addBudget: (b: Omit<BudgetCategory, 'id' | 'spent'>) => Promise<void>
+  updateBudget: (id: string, b: Partial<BudgetCategory>) => Promise<void>
+  deleteBudget: (id: string) => Promise<void>
+  refreshBudgets: () => Promise<void>
 
   // Investment CRUD
-  addInvestment: (inv: Omit<Investment, 'id'>) => void
-  updateInvestment: (id: string, inv: Partial<Investment>) => void
-  deleteInvestment: (id: string) => void
+  addInvestment: (inv: Omit<Investment, 'id'>) => Promise<void>
+  updateInvestment: (id: string, inv: Partial<Investment>) => Promise<void>
+  deleteInvestment: (id: string) => Promise<void>
+  refreshInvestments: () => Promise<void>
 
-  setEmergencyFund: (val: number) => void
+  setEmergencyFund: (val: number) => Promise<void>
 
   // Derived
   totalCredit: number
@@ -153,32 +119,193 @@ export function useApp() {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile>({ name: '', email: '', plan: 'FREE', isLoggedIn: false })
-  const [transactions, setTransactions] = useState<Transaction[]>(seedTransactions)
-  const [budgets, setBudgets] = useState<BudgetCategory[]>(seedBudgets)
-  const [investments, setInvestments] = useState<Investment[]>(seedInvestments)
-  const [emergencyFund, setEmergencyFund] = useState(3000)
-  const emergencyTarget = 15000
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [budgets, setBudgets] = useState<BudgetCategory[]>([])
+  const [investments, setInvestments] = useState<Investment[]>([])
+  const [emergencyFund, setEmergencyFundState] = useState(0)
+  const [emergencyTarget, setEmergencyTarget] = useState(15000)
+  const [loading, setLoading] = useState(true)
+
+  // Check if user is logged in on mount
+  useEffect(() => {
+    const token = api.getAccessToken()
+    if (token) {
+      loadUserData()
+    } else {
+      setLoading(false)
+    }
+  }, [])
+
+  async function loadUserData() {
+    try {
+      const userProfile = await api.getCurrentUser()
+      setUser({
+        name: userProfile.name,
+        email: userProfile.email,
+        plan: userProfile.plan,
+        isLoggedIn: true,
+      })
+      setEmergencyFundState(userProfile.emergency_fund)
+      setEmergencyTarget(userProfile.emergency_target)
+
+      // Load all data in parallel
+      await Promise.all([
+        refreshTransactions(),
+        refreshBudgets(),
+        refreshInvestments(),
+      ])
+    } catch (error) {
+      console.error('Failed to load user data:', error)
+      api.clearTokens()
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // ── User ──
-  const login = (name: string, email: string) => setUser({ name: name || 'Student', email, plan: user.plan, isLoggedIn: true })
-  const signup = (name: string, email: string) => setUser({ name, email, plan: 'FREE', isLoggedIn: true })
-  const logout = () => setUser({ name: '', email: '', plan: 'FREE', isLoggedIn: false })
-  const togglePlan = () => setUser(u => ({ ...u, plan: u.plan === 'FREE' ? 'PRO' : 'FREE' }))
+  const login = async (email: string, password: string) => {
+    const response = await api.login(email, password)
+    api.setTokens(response.access_token, response.refresh_token)
+    await loadUserData()
+  }
+
+  const signup = async (name: string, email: string, password: string) => {
+    const response = await api.signup(name, email, password)
+    api.setTokens(response.access_token, response.refresh_token)
+    await loadUserData()
+  }
+
+  const logout = async () => {
+    await api.logout()
+    setUser({ name: '', email: '', plan: 'FREE', isLoggedIn: false })
+    setTransactions([])
+    setBudgets([])
+    setInvestments([])
+    setEmergencyFundState(0)
+  }
+
+  const togglePlan = async () => {
+    const newPlan = user.plan === 'FREE' ? 'PRO' : 'FREE'
+    await api.updateUser({ plan: newPlan })
+    setUser(u => ({ ...u, plan: newPlan }))
+  }
 
   // ── Transactions ──
-  const addTransaction = (t: Omit<Transaction, 'id'>) => setTransactions(prev => [{ ...t, id: uid() }, ...prev])
-  const updateTransaction = (id: string, t: Partial<Transaction>) => setTransactions(prev => prev.map(x => x.id === id ? { ...x, ...t } : x))
-  const deleteTransaction = (id: string) => setTransactions(prev => prev.filter(x => x.id !== id))
+  const refreshTransactions = async () => {
+    const data = await api.getTransactions()
+    setTransactions(data.map(t => ({
+      id: t.id,
+      date: t.date,
+      description: t.description,
+      amount: t.amount,
+      category: t.category as ExpenseCategory,
+      type: t.type,
+    })))
+  }
+
+  const addTransaction = async (t: Omit<Transaction, 'id'>) => {
+    await api.createTransaction({
+      date: t.date,
+      description: t.description,
+      amount: t.amount,
+      category: t.category,
+      type: t.type,
+    })
+    await refreshTransactions()
+  }
+
+  const updateTransaction = async (id: string, t: Partial<Transaction>) => {
+    await api.updateTransaction(id, t)
+    await refreshTransactions()
+  }
+
+  const deleteTransaction = async (id: string) => {
+    await api.deleteTransaction(id)
+    await refreshTransactions()
+  }
 
   // ── Budgets ──
-  const addBudget = (b: Omit<BudgetCategory, 'id' | 'spent'>) => setBudgets(prev => [...prev, { ...b, id: uid(), spent: 0 }])
-  const updateBudget = (id: string, b: Partial<BudgetCategory>) => setBudgets(prev => prev.map(x => x.id === id ? { ...x, ...b } : x))
-  const deleteBudget = (id: string) => setBudgets(prev => prev.filter(x => x.id !== id))
+  const refreshBudgets = async () => {
+    const data = await api.getBudgets()
+    setBudgets(data.map(b => ({
+      id: b.id,
+      name: b.name,
+      icon: b.icon,
+      limit: b.limit_amount,
+      spent: b.spent,
+      locked: b.locked,
+    })))
+  }
+
+  const addBudget = async (b: Omit<BudgetCategory, 'id' | 'spent'>) => {
+    await api.createBudget({
+      name: b.name,
+      icon: b.icon,
+      limit_amount: b.limit,
+      locked: b.locked,
+    })
+    await refreshBudgets()
+  }
+
+  const updateBudget = async (id: string, b: Partial<BudgetCategory>) => {
+    const payload: any = {}
+    if (b.name !== undefined) payload.name = b.name
+    if (b.icon !== undefined) payload.icon = b.icon
+    if (b.limit !== undefined) payload.limit_amount = b.limit
+    if (b.locked !== undefined) payload.locked = b.locked
+    await api.updateBudget(id, payload)
+    await refreshBudgets()
+  }
+
+  const deleteBudget = async (id: string) => {
+    await api.deleteBudget(id)
+    await refreshBudgets()
+  }
 
   // ── Investments ──
-  const addInvestment = (inv: Omit<Investment, 'id'>) => setInvestments(prev => [...prev, { ...inv, id: uid() }])
-  const updateInvestment = (id: string, inv: Partial<Investment>) => setInvestments(prev => prev.map(x => x.id === id ? { ...x, ...inv } : x))
-  const deleteInvestment = (id: string) => setInvestments(prev => prev.filter(x => x.id !== id))
+  const refreshInvestments = async () => {
+    const data = await api.getInvestments()
+    setInvestments(data.map(i => ({
+      id: i.id,
+      name: i.name,
+      type: i.type,
+      value: i.value,
+      notes: i.notes || '',
+      dateAdded: i.date_added,
+    })))
+  }
+
+  const addInvestment = async (inv: Omit<Investment, 'id'>) => {
+    await api.createInvestment({
+      name: inv.name,
+      type: inv.type,
+      value: inv.value,
+      notes: inv.notes,
+      date_added: inv.dateAdded,
+    })
+    await refreshInvestments()
+  }
+
+  const updateInvestment = async (id: string, inv: Partial<Investment>) => {
+    const payload: any = {}
+    if (inv.name !== undefined) payload.name = inv.name
+    if (inv.type !== undefined) payload.type = inv.type
+    if (inv.value !== undefined) payload.value = inv.value
+    if (inv.notes !== undefined) payload.notes = inv.notes
+    if (inv.dateAdded !== undefined) payload.date_added = inv.dateAdded
+    await api.updateInvestment(id, payload)
+    await refreshInvestments()
+  }
+
+  const deleteInvestment = async (id: string) => {
+    await api.deleteInvestment(id)
+    await refreshInvestments()
+  }
+
+  const setEmergencyFund = async (val: number) => {
+    await api.updateUser({ emergency_fund: val })
+    setEmergencyFundState(val)
+  }
 
   // ── Derived ──
   const totalCredit = transactions.filter(t => t.type === 'credit').reduce((a, t) => a + t.amount, 0)
@@ -191,19 +318,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     categorySpending[t.category] = (categorySpending[t.category] || 0) + t.amount
   })
 
-  // Sync budget spent from transactions
-  const budgetsWithSpent = budgets.map(b => ({
-    ...b,
-    spent: categorySpending[b.name] || 0,
-  }))
-
   return (
     <AppContext.Provider value={{
-      user, transactions, budgets: budgetsWithSpent, investments, emergencyFund, emergencyTarget,
+      user, transactions, budgets, investments, emergencyFund, emergencyTarget, loading,
       login, signup, logout, togglePlan,
-      addTransaction, updateTransaction, deleteTransaction,
-      addBudget, updateBudget, deleteBudget,
-      addInvestment, updateInvestment, deleteInvestment,
+      addTransaction, updateTransaction, deleteTransaction, refreshTransactions,
+      addBudget, updateBudget, deleteBudget, refreshBudgets,
+      addInvestment, updateInvestment, deleteInvestment, refreshInvestments,
       setEmergencyFund,
       totalCredit, totalDebit, balance, totalInvested, categorySpending,
     }}>

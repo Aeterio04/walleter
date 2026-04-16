@@ -24,8 +24,8 @@ export default function Settings() {
     setNotifications(prev => prev.map(n => n.key === key ? { ...n, enabled: !n.enabled } : n))
   }
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     navigate('/')
   }
 

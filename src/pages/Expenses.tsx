@@ -72,7 +72,7 @@ export default function Expenses() {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <div className="p-8 border-b border-muted/30">
-        <p className="text-[10px] text-muted uppercase tracking-[0.2em] mb-2">EXPENSE & INCOME LEDGER</p>
+        <p className="text-[10px] text-muted uppercase tracking-[0.2em] mb-2 terminal-prompt">EXPENSE & INCOME LEDGER</p>
         <h1 className="font-display text-[48px] leading-[0.95] text-text uppercase tracking-tight mb-4">
           TRANSACTION<br /><span className="text-primary">TRACKER</span>
         </h1>
@@ -102,10 +102,36 @@ export default function Expenses() {
         </div>
       </div>
 
+      {/* Mini spending trend */}
+      {transactions.filter(t => t.type === 'debit').length > 1 && (() => {
+        const debits = transactions.filter(t => t.type === 'debit').slice(0, 12).reverse()
+        const maxAmt = Math.max(...debits.map(d => d.amount), 1)
+        const pts = debits.map((d, i) => {
+          const x = (i / Math.max(debits.length - 1, 1)) * 100
+          const y = 40 - (d.amount / maxAmt) * 36
+          return `${x},${y}`
+        }).join(' ')
+        return (
+          <div className="px-8 py-3 border-b border-muted/20 flex items-center gap-4">
+            <p className="text-[9px] text-muted uppercase tracking-[0.2em] flex-shrink-0">SPENDING TREND</p>
+            <svg viewBox="0 0 100 44" className="flex-1 h-[36px]" preserveAspectRatio="none">
+              <line x1="0" y1="22" x2="100" y2="22" stroke="#71717A" strokeWidth="0.15" strokeDasharray="2,3" />
+              <polyline points={pts} fill="none" stroke="#FA114F" strokeWidth="1" strokeLinejoin="round" className="animate-draw" />
+              {debits.map((d, i) => {
+                const x = (i / Math.max(debits.length - 1, 1)) * 100
+                const y = 40 - (d.amount / maxAmt) * 36
+                return <circle key={i} cx={x} cy={y} r="1.2" fill="#FA114F" opacity="0.6" />
+              })}
+            </svg>
+            <p className="text-[9px] text-muted mono-number flex-shrink-0">{debits.length} TXN</p>
+          </div>
+        )
+      })()}
+
       {/* Add Form */}
       {showAdd && (
         <form onSubmit={handleAdd} className="p-6 border-b border-primary/30 bg-primary/5">
-          <p className="text-[10px] text-primary uppercase tracking-[0.2em] mb-4">NEW ENTRY</p>
+          <p className="text-[10px] text-primary uppercase tracking-[0.2em] mb-4 terminal-prompt">NEW ENTRY</p>
           <div className="grid grid-cols-[120px_1fr_120px_140px_100px_120px] gap-3 items-end">
             <div>
               <label className="text-[10px] text-muted uppercase tracking-[0.15em] block mb-1">DATE</label>
@@ -113,7 +139,7 @@ export default function Expenses() {
                 type="date"
                 value={newDate}
                 onChange={e => setNewDate(e.target.value)}
-                className="w-full bg-transparent border border-muted/50 px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+                className="w-full bg-transparent border border-muted/50 px-3 py-2 text-sm text-text focus:border-primary focus:outline-none focus:shadow-[0_0_8px_rgba(204,255,0,0.15)]"
               />
             </div>
             <div>
@@ -123,7 +149,7 @@ export default function Expenses() {
                 value={newDesc}
                 onChange={e => setNewDesc(e.target.value)}
                 placeholder="What was this for?"
-                className="w-full bg-transparent border border-muted/50 px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+                className="w-full bg-transparent border border-muted/50 px-3 py-2 text-sm text-text focus:border-primary focus:outline-none focus:shadow-[0_0_8px_rgba(204,255,0,0.15)]"
               />
             </div>
             <div>
@@ -134,7 +160,7 @@ export default function Expenses() {
                 value={newAmount}
                 onChange={e => setNewAmount(e.target.value)}
                 placeholder="₹0"
-                className="w-full bg-transparent border border-muted/50 px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
+                className="w-full bg-transparent border border-muted/50 px-3 py-2 text-sm text-text focus:border-primary focus:outline-none focus:shadow-[0_0_8px_rgba(204,255,0,0.15)]"
               />
             </div>
             <div>
@@ -213,13 +239,14 @@ export default function Expenses() {
             ))}
           </select>
         </div>
-        <span className="text-[10px] text-muted uppercase tracking-[0.15em] ml-auto">
+        <span className="text-[10px] text-muted uppercase tracking-[0.15em] ml-auto mono-number">
           {filtered.length} ENTRIES
         </span>
       </div>
 
-      {/* Table header */}
-      <div className="grid grid-cols-[90px_1fr_110px_70px_100px_60px] px-8 py-3 text-[10px] text-muted uppercase tracking-[0.15em] border-b border-muted/20">
+      {/* Table header — terminal style */}
+      <div className="grid grid-cols-[36px_90px_1fr_110px_70px_100px_60px] px-8 py-3 text-[10px] text-muted uppercase tracking-[0.15em] border-b border-muted/20 bg-surface/20">
+        <span className="terminal-gutter">#</span>
         <span>DATE</span>
         <span>DESCRIPTION</span>
         <span>CATEGORY</span>
@@ -230,22 +257,23 @@ export default function Expenses() {
 
       {/* Rows */}
       <div className="flex-1 overflow-auto">
-        {filtered.map(entry => (
+        {filtered.map((entry, i) => (
           <div key={entry.id}>
             {editId === entry.id ? (
               /* Edit mode */
-              <div className="grid grid-cols-[90px_1fr_110px_70px_100px_60px] px-8 py-2 border-b border-primary/30 bg-primary/5 gap-2 items-center">
+              <div className="grid grid-cols-[36px_90px_1fr_110px_70px_100px_60px] px-8 py-2 border-b border-primary/30 bg-primary/5 gap-2 items-center">
+                <span className="terminal-gutter">{String(i + 1).padStart(2, '0')}</span>
                 <input
                   type="date"
                   value={editDate}
                   onChange={e => setEditDate(e.target.value)}
-                  className="bg-transparent border border-primary/50 px-2 py-1 text-xs text-text focus:outline-none"
+                  className="bg-transparent border border-primary/50 px-2 py-1 text-xs text-text focus:outline-none focus:shadow-[0_0_8px_rgba(204,255,0,0.15)]"
                 />
                 <input
                   type="text"
                   value={editDesc}
                   onChange={e => setEditDesc(e.target.value)}
-                  className="bg-transparent border border-primary/50 px-2 py-1 text-xs text-text focus:outline-none"
+                  className="bg-transparent border border-primary/50 px-2 py-1 text-xs text-text focus:outline-none focus:shadow-[0_0_8px_rgba(204,255,0,0.15)]"
                 />
                 <select
                   value={editCategory}
@@ -257,15 +285,17 @@ export default function Expenses() {
                 <button
                   type="button"
                   onClick={() => setEditType(editType === 'credit' ? 'debit' : 'credit')}
-                  className={`text-[10px] font-bold uppercase py-1 ${editType === 'credit' ? 'text-primary' : 'text-danger'}`}
+                  className="text-center"
                 >
-                  {editType === 'credit' ? 'IN' : 'OUT'}
+                  <span className={`type-badge ${editType === 'credit' ? 'type-badge-in' : 'type-badge-out'}`}>
+                    {editType === 'credit' ? 'IN' : 'OUT'}
+                  </span>
                 </button>
                 <input
                   type="number"
                   value={editAmount}
                   onChange={e => setEditAmount(e.target.value)}
-                  className="bg-transparent border border-primary/50 px-2 py-1 text-xs text-text text-right focus:outline-none"
+                  className="bg-transparent border border-primary/50 px-2 py-1 text-xs text-text text-right focus:outline-none focus:shadow-[0_0_8px_rgba(204,255,0,0.15)]"
                 />
                 <div className="flex gap-1 justify-end">
                   <button onClick={saveEdit} className="text-primary text-xs font-bold">✓</button>
@@ -273,15 +303,18 @@ export default function Expenses() {
                 </div>
               </div>
             ) : (
-              /* View mode */
-              <div className="grid grid-cols-[90px_1fr_110px_70px_100px_60px] px-8 py-3 border-b border-muted/10 ledger-row group items-center">
+              /* View mode — terminal row */
+              <div className={`grid grid-cols-[36px_90px_1fr_110px_70px_100px_60px] px-8 py-3 border-b border-muted/10 terminal-row group items-center ${
+                entry.type === 'credit' ? 'terminal-row-credit' : 'terminal-row-debit'
+              }`}>
+                <span className="terminal-gutter">{String(i + 1).padStart(2, '0')}</span>
                 <span className="text-xs text-muted mono-number">{entry.date}</span>
                 <span className="text-sm text-text">{entry.description}</span>
                 <span className="text-[10px] text-muted uppercase tracking-[0.1em]">{entry.category}</span>
-                <span className={`text-[10px] text-center uppercase font-bold ${
-                  entry.type === 'credit' ? 'text-primary' : 'text-danger'
-                }`}>
-                  {entry.type === 'credit' ? 'IN' : 'OUT'}
+                <span className="text-center">
+                  <span className={`type-badge ${entry.type === 'credit' ? 'type-badge-in' : 'type-badge-out'}`}>
+                    {entry.type === 'credit' ? 'IN' : 'OUT'}
+                  </span>
                 </span>
                 <span className={`text-sm text-right font-bold mono-number ${
                   entry.type === 'credit' ? 'text-primary' : 'text-text'

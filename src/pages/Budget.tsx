@@ -261,21 +261,76 @@ export default function Budget() {
         )}
       </div>
 
-      {/* Summary bar */}
+      {/* Summary bar + Pie chart */}
       <div className="border-t border-muted/30 p-6">
-        <p className="text-[10px] text-muted uppercase tracking-[0.2em] mb-3">REMAINING THIS MONTH</p>
-        <div className="flex gap-6">
-          {budgets.map(b => {
-            const remaining = b.limit - b.spent
+        <div className="flex gap-8">
+          {/* Remaining cards */}
+          <div className="flex-1">
+            <p className="text-[10px] text-muted uppercase tracking-[0.2em] mb-3">REMAINING THIS MONTH</p>
+            <div className="flex gap-4 flex-wrap">
+              {budgets.map(b => {
+                const remaining = b.limit - b.spent
+                return (
+                  <div key={b.id} className="border border-muted/20 px-4 py-2">
+                    <span className="text-[10px] text-muted uppercase tracking-[0.1em]">{b.icon} {b.name}</span>
+                    <p className={`text-sm font-bold mono-number mt-0.5 ${remaining >= 0 ? 'text-primary' : 'text-danger'}`}>
+                      {formatINR(remaining)}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Pie Chart */}
+          {budgets.length > 0 && (() => {
+            const pieColors = ['#CCFF00', '#FA114F', '#71717A', '#F4F4F5', '#A3E635', '#FB923C']
+            const total = budgets.reduce((a, b) => a + b.spent, 0) || 1
+            const radius = 50
+            const cx = 60
+            const cy = 60
+            let cumulative = 0
+
             return (
-              <div key={b.id} className="border border-muted/20 px-4 py-2">
-                <span className="text-[10px] text-muted uppercase tracking-[0.1em]">{b.icon} {b.name}</span>
-                <p className={`text-sm font-bold mono-number mt-0.5 ${remaining >= 0 ? 'text-primary' : 'text-danger'}`}>
-                  {formatINR(remaining)}
-                </p>
+              <div className="flex-shrink-0 animate-pie">
+                <p className="text-[10px] text-muted uppercase tracking-[0.2em] mb-3">ALLOCATION</p>
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                  {budgets.map((b, i) => {
+                    const pct = b.spent / total
+                    const startAngle = cumulative * 360
+                    const endAngle = (cumulative + pct) * 360
+                    cumulative += pct
+
+                    const startRad = (startAngle - 90) * Math.PI / 180
+                    const endRad = (endAngle - 90) * Math.PI / 180
+                    const largeArc = pct > 0.5 ? 1 : 0
+
+                    const x1 = cx + radius * Math.cos(startRad)
+                    const y1 = cy + radius * Math.sin(startRad)
+                    const x2 = cx + radius * Math.cos(endRad)
+                    const y2 = cy + radius * Math.sin(endRad)
+
+                    if (pct < 0.01) return null
+
+                    return (
+                      <path
+                        key={b.id}
+                        d={`M${cx},${cy} L${x1},${y1} A${radius},${radius} 0 ${largeArc},1 ${x2},${y2} Z`}
+                        fill={pieColors[i % pieColors.length]}
+                        stroke="#09090B"
+                        strokeWidth="1.5"
+                        opacity={0.85}
+                      />
+                    )
+                  })}
+                  <circle cx={cx} cy={cy} r="22" fill="#09090B" />
+                  <text x={cx} y={cy + 4} textAnchor="middle" fill="#71717A" fontSize="9" fontFamily="var(--font-sans)" letterSpacing="0.1em">
+                    {Math.round((totalSpent / totalLimit) * 100)}%
+                  </text>
+                </svg>
               </div>
             )
-          })}
+          })()}
         </div>
       </div>
 

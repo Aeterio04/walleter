@@ -1,4 +1,5 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import Copilot from '../components/Copilot'
 
 const navItems = [
   { path: '/dashboard', label: 'DASHBOARD', icon: <DashboardIcon /> },
@@ -110,8 +111,11 @@ export default function DashboardLayout() {
 
         {/* Status bar */}
         <div className="p-4 border-t border-muted/30">
-          <p className="font-sans text-[10px] text-muted uppercase tracking-[0.15em]">
+          <p className="font-sans text-[10px] text-muted uppercase tracking-[0.15em] mb-1">
             SYS.STATUS: ONLINE
+          </p>
+          <p className="font-sans text-[9px] text-muted/60 uppercase tracking-[0.12em]">
+            BUILD: WA-V2.4.1
           </p>
         </div>
       </aside>
@@ -120,6 +124,9 @@ export default function DashboardLayout() {
       <main className="flex-1 ml-[200px] min-h-screen">
         <Outlet />
       </main>
+
+      {/* AI Co-pilot */}
+      <Copilot />
     </div>
   )
 }

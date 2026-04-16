@@ -45,6 +45,7 @@ class User(Base):
     budgets = relationship("Budget", back_populates="user", cascade="all, delete-orphan")
     investments = relationship("Investment", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    ai_insights = relationship("AIInsight", back_populates="user", cascade="all, delete-orphan")
 
 
 class RefreshToken(Base):
@@ -104,3 +105,18 @@ class Investment(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     user = relationship("User", back_populates="investments")
+
+
+class AIInsight(Base):
+    __tablename__ = "ai_insights"
+    
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    tag = Column(String(100), nullable=False)  # SPENDING ALERT, SUBSCRIPTION CHECK, etc.
+    headline = Column(String(500), nullable=False)
+    content = Column(String, nullable=False)  # JSON string with body, conclusion, stats
+    dismissed = Column(Boolean, default=False)
+    dismissed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", back_populates="ai_insights")
