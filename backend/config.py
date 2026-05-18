@@ -11,6 +11,13 @@ class Settings(BaseSettings):
     GROK_API_KEY: str = "your-groq-api-key-here"
     GROK_API_URL: str = "https://api.groq.com/openai/v1/chat/completions"
     
+    # Postgres variables
+    DB_USER: str = ""
+    DB_PASSWORD: str = ""
+    DB_HOST: str = ""
+    DB_PORT: str = "5432"
+    DB_NAME: str = ""
+    
     class Config:
         env_file = ".env"
 

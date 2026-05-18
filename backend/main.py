@@ -15,7 +15,7 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite dev server
+    allow_origins=["*"],  # Allow all origins (Vite, Android emulator, physical devices)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
